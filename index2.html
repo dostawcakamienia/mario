@@ -62,7 +62,6 @@
             position: relative;
         }
 
-        /* Efekt Matrixa w tle - dostosowany pod interfejs gry */
         #matrix-bg {
             position: fixed;
             top: 0;
@@ -90,7 +89,6 @@
             overflow: hidden;
         }
 
-        /* Delikatna poświata wewnątrz kontenera dopasowana do koloru Matrixa */
         .container::before {
             content: '';
             position: absolute;
@@ -103,14 +101,43 @@
             pointer-events: none;
         }
 
-        h1 {
-            font-size: 3rem;
+        /* Kontener dla tytułu i guzika Odśwież */
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .header-container h1 {
+            font-size: 3rem;
             color: #ffffff;
             letter-spacing: 2px;
             text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
-            position: relative;
-            z-index: 1;
+            margin: 0;
+        }
+
+        /* Styl guzika odświeżającego - przyklejony do prawej */
+        #minesRefresh {
+            position: absolute;
+            right: 0;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #8a4fff, #bb86fc);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #minesRefresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(187, 134, 252, 0.5);
         }
 
         .balance {
@@ -181,17 +208,11 @@
             box-shadow: none;
         }
 
-        .all-in-button {
-            background: linear-gradient(45deg, #ff4444, #ff6666) !important;
-        }
-
-        .all-in-button:hover {
-            box-shadow: 0 6px 15px rgba(255, 68, 68, 0.4) !important;
-        }
-
-        /* Nadanie przyciskowi All In odpowiedniej klasy, bo skrypt JS szukał go po ID */
         #minesAllIn {
             background: linear-gradient(45deg, #ff4444, #ff6666);
+        }
+        #minesAllIn:hover {
+            box-shadow: 0 6px 15px rgba(255, 68, 68, 0.4);
         }
 
         .grid {
@@ -273,8 +294,15 @@
             .game-controls select {
                 width: 140px;
             }
-            h1 {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .header-container h1 {
                 font-size: 2.5rem;
+            }
+            #minesRefresh {
+                position: static; /* Na telefonach układa się pod tytułem, żeby nie wychodzić za ekran */
             }
             .balance {
                 font-size: 1.6rem;
@@ -284,11 +312,15 @@
 </head>
 <body>
 
-    <!-- Dynamiczne tło pod spodem panelu -->
     <canvas id="matrix-bg"></canvas>
 
     <div class="container">
-        <h1>Mines</h1>
+        <!-- Zmieniony układ: tytuł i guzik Odśwież obok niego -->
+        <div class="header-container">
+            <h1>Mines</h1>
+            <button id="minesRefresh" onclick="window.location.reload()">Odśwież</button>
+        </div>
+
         <div class="balance">Saldo: <span id="balance">1000</span> PLN</div>
         <div class="game-controls">
             <input type="number" id="minesBetAmount" min="1" placeholder="Zakład (PLN)">
@@ -296,6 +328,9 @@
                 <option value="1">1 mina</option>
                 <option value="2">2 miny</option>
                 <option value="3">3 miny</option>
+                <option value="4">4 miny</option>
+                <option value="5">5 miny</option>
+                <option value="6">6 min</option>
             </select>
             <button id="minesAllIn">All In</button>
             <button id="minesStartGame">Rozpocznij grę</button>
@@ -306,7 +341,6 @@
     </div>
 
     <script>
-        // --- LOGIKA MECHANIZMU MATERIXA ---
         const canvas = document.getElementById('matrix-bg');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -334,12 +368,9 @@
         }
         setInterval(drawMatrix, 30);
 
-
-        // --- ORYGINALNA LOGIKA GRY MINES ---
         let balance = 1000;
         const balanceElement = document.getElementById('balance');
 
-        // Audio elements
         const clickSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_6d0d750382.mp3');
         const winSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_5f5b8b6e1e.mp3');
         const loseSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_3e4b4b6e1e.mp3');
@@ -386,11 +417,15 @@
             }
         }
 
+        // Dodane nowe mnożniki wygranych dla 4, 5 i 6 min
         function getMinesMultiplierBase() {
             switch (parseInt(mineCount)) {
                 case 1: return 1.05;
                 case 2: return 1.10;
                 case 3: return 1.15;
+                case 4: return 1.25;
+                case 5: return 1.35;
+                case 6: return 1.50;
                 default: return 1.05;
             }
         }
@@ -415,12 +450,14 @@
         function startMinesGame() {
             minesBetAmount = parseFloat(minesBetAmountInput.value) || 0;
             mineCount = parseInt(mineCountInput.value) || 1;
+            
             if (minesBetAmount <= 0 || minesBetAmount > balance) {
                 minesMessageElement.textContent = 'Nieprawidłowa kwota zakładu lub niewystarczające saldo.';
                 return;
             }
-            if (mineCount < 1 || mineCount > 3) {
-                minesMessageElement.textContent = 'Liczba min musi być od 1 do 3.';
+            // Zwiększony limit z 3 do 6 min, aby nie blokowało startu przy wyższych opcjach
+            if (mineCount < 1 || mineCount > 6) {
+                minesMessageElement.textContent = 'Liczba min musi być od 1 do 6.';
                 return;
             }
 
@@ -507,7 +544,6 @@
         minesAllInButton.addEventListener('click', allIn);
         minesCashOutButton.addEventListener('click', minesCashOut);
 
-        // Inicjalizacja
         updateBalance();
         createMinesGrid();
     </script>
