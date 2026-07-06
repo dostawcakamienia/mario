@@ -528,7 +528,7 @@
                 
                 for (let i = 1; i <= stepsToShow; i++) {
                     let nextMult = currentMult * Math.pow(baseMult, i);
-                    let label = (currentClicks === 0) ? `Za ${i}. pole` : `+${i} pole (${currentClicks + i}/${maxSafeClicks})`;
+                    let label = (currentClicks === 0) ? `${i}. pole` : `(${currentClicks + i}/${maxSafeClicks})`;
                     
                     html += `
                         <div class="step-item">
@@ -539,7 +539,7 @@
                 }
 
                 if (remainingClicks > stepsToShow) {
-                    html += `<div class="step-dots">...oraz kolejne aż do x${(currentMult * Math.pow(baseMult, remainingClicks)).toFixed(2)} na końcu!</div>`;
+                    html += `<div class="step-dots"> x${(currentMult * Math.pow(baseMult, remainingClicks)).toFixed(2)} na końcu!</div>`;
                 }
             }
 
