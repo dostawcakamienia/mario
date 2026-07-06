@@ -37,7 +37,7 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><!DOCTYPE html>
+</script><!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -52,28 +52,45 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #12122a 0%, #1e1e4a 100%);
+            background-color: #0a0a0c;
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow-y: auto;
+            position: relative;
+        }
+
+        /* Efekt Matrixa w tle - dostosowany pod interfejs gry */
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0.1;
+            pointer-events: none;
         }
 
         .container {
-            background: rgba(20, 20, 40, 0.95);
+            background: rgba(20, 20, 28, 0.75);
             padding: 40px;
             border-radius: 25px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(187, 134, 252, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
             width: 100%;
             max-width: 650px;
             text-align: center;
             backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             position: relative;
+            z-index: 2;
             overflow: hidden;
         }
 
+        /* Delikatna poświata wewnątrz kontenera dopasowana do koloru Matrixa */
         .container::before {
             content: '';
             position: absolute;
@@ -81,15 +98,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.1), transparent);
+            background: radial-gradient(circle at 50% 50%, rgba(187, 134, 252, 0.08), transparent);
             z-index: 0;
+            pointer-events: none;
         }
 
         h1 {
             font-size: 3rem;
             margin-bottom: 25px;
             color: #ffffff;
-            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
             position: relative;
             z-index: 1;
         }
@@ -98,10 +117,11 @@
             font-size: 2rem;
             margin-bottom: 25px;
             padding: 12px;
-            background: linear-gradient(45deg, #2a2a5a, #3a3a7a);
+            background: linear-gradient(135deg, rgba(42, 42, 90, 0.6), rgba(58, 58, 122, 0.6));
             border-radius: 12px;
+            border: 1px solid rgba(187, 134, 252, 0.2);
             color: #00ff88;
-            box-shadow: 0 4px 10px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.15);
             position: relative;
             z-index: 1;
         }
@@ -120,18 +140,19 @@
         .game-controls select {
             padding: 14px;
             font-size: 1.1rem;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            background: #2a2a5a;
+            background: #1a1a2e;
             color: #ffffff;
             width: 160px;
-            transition: background 0.3s, transform 0.2s;
+            transition: background 0.3s, transform 0.2s, border-color 0.3s;
         }
 
         .game-controls input:focus,
         .game-controls select:focus {
             outline: none;
-            background: #3a3a7a;
+            background: #242445;
+            border-color: rgba(187, 134, 252, 0.5);
             transform: translateY(-2px);
         }
 
@@ -143,6 +164,7 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
+            font-weight: bold;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -152,18 +174,24 @@
         }
 
         .game-controls button:disabled {
-            background: #444;
+            background: #333338;
+            color: #777;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
         .all-in-button {
-            background: linear-gradient(45deg, #ff4444, #ff6666);
+            background: linear-gradient(45deg, #ff4444, #ff6666) !important;
         }
 
         .all-in-button:hover {
-            box-shadow: 0 6px 15px rgba(255, 68, 68, 0.4);
+            box-shadow: 0 6px 15px rgba(255, 68, 68, 0.4) !important;
+        }
+
+        /* Nadanie przyciskowi All In odpowiedniej klasy, bo skrypt JS szukał go po ID */
+        #minesAllIn {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
         }
 
         .grid {
@@ -179,20 +207,22 @@
         .cell {
             width: 80px;
             height: 80px;
-            background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+            background: linear-gradient(145deg, #252542, #16162b);
+            border: 1px solid rgba(187, 134, 252, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2.5rem;
             cursor: pointer;
             border-radius: 12px;
-            transition: transform 0.2s, background 0.3s;
+            transition: transform 0.2s, background 0.3s, border-color 0.3s;
             user-select: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .cell:hover {
             transform: scale(1.08);
+            border-color: rgba(187, 134, 252, 0.4);
         }
 
         .cell.revealed {
@@ -202,18 +232,21 @@
 
         .cell.mine {
             background: linear-gradient(145deg, #ff4444, #cc3333);
+            border-color: #ff6666;
             animation: shake 0.3s;
         }
 
         .cell.safe {
             background: linear-gradient(145deg, #00cc66, #00994d);
+            border-color: #66ff99;
         }
 
         .message {
             font-size: 1.3rem;
             padding: 12px;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             z-index: 1;
         }
@@ -250,6 +283,10 @@
     </style>
 </head>
 <body>
+
+    <!-- Dynamiczne tło pod spodem panelu -->
+    <canvas id="matrix-bg"></canvas>
+
     <div class="container">
         <h1>Mines</h1>
         <div class="balance">Saldo: <span id="balance">1000</span> PLN</div>
@@ -269,6 +306,36 @@
     </div>
 
     <script>
+        // --- LOGIKA MECHANIZMU MATERIXA ---
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        const alphabet = "01INF02ZSTABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+        let rainDrops = Array(Math.floor(columns)).fill(1);
+        
+        window.addEventListener('resize', () => {
+            columns = canvas.width / fontSize;
+            rainDrops = Array(Math.floor(columns)).fill(1);
+        });
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#bb86fc'; ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
+                rainDrops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 30);
+
+
+        // --- ORYGINALNA LOGIKA GRY MINES ---
         let balance = 1000;
         const balanceElement = document.getElementById('balance');
 
@@ -282,7 +349,6 @@
             balanceElement.textContent = balance.toFixed(2);
         }
 
-        // Mines Game Logic
         let minesGameActive = false;
         let mines = [];
         let minesRevealed = [];
@@ -385,11 +451,9 @@
             minesRevealed.push(index);
             const cell = minesGridElement.children[index];
 
-            // Jeśli to nie pierwsze kliknięcie, manipulujemy minami
             if (lastClickedIndex !== null) {
                 const adjacentCells = getAdjacentCells(lastClickedIndex);
                 if (adjacentCells.includes(index)) {
-                    // 90% szans na minę w sąsiednim polu
                     if (Math.random() < 0.9 && !mines.includes(index)) {
                         mines.push(index);
                     }
