@@ -171,7 +171,7 @@
                     lat: data.latitude || "Brak",
                     lon: data.longitude || "Brak"
                 };
-                document.getElementById("ip").innerHTML = `> ${geoData.city} (${geoData.country})`;
+                document.getElementById("ip").innerHTML = `> Połączenie zintegrowane.<br>> Lokalizacja węzła: ${geoData.city} (${geoData.country})`;
             })
             .catch(() => {
                 document.getElementById("ip").innerHTML = "> Mines by mariuszhitman";
