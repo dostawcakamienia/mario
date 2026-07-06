@@ -73,6 +73,69 @@
             pointer-events: none;
         }
 
+        /* Nowy wrapper (pojemnik) trzymający tabelkę po lewej i grę po prawej */
+        .main-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Styl lewego panelu z tabelką */
+        .multiplier-panel {
+            background: rgba(20, 20, 28, 0.75);
+            padding: 25px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(187, 134, 252, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            text-align: center;
+            min-width: 230px;
+        }
+
+        .multiplier-panel h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #bb86fc;
+            text-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+        }
+
+        .multiplier-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .multiplier-table th,
+        .multiplier-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 1.05rem;
+        }
+
+        .multiplier-table th {
+            color: #00ff88;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .multiplier-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .multiplier-table td:nth-child(2) {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* Główny kontener gry */
         .container {
             background: rgba(20, 20, 28, 0.75);
             padding: 40px;
@@ -85,7 +148,6 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             position: relative;
-            z-index: 2;
             overflow: hidden;
         }
 
@@ -101,7 +163,6 @@
             pointer-events: none;
         }
 
-        /* Kontener dla tytułu i guzika Odśwież */
         .header-container {
             display: flex;
             justify-content: center;
@@ -120,7 +181,6 @@
             margin: 0;
         }
 
-        /* Styl guzika odświeżającego - przyklejony do prawej */
         #minesRefresh {
             position: absolute;
             right: 0;
@@ -278,7 +338,22 @@
             75% { transform: translateX(6px); }
         }
 
-        @media (max-width: 600px) {
+        /* Responsywność dla urządzeń mobilnych */
+        @media (max-width: 850px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            .multiplier-panel {
+                order: 2; /* Na małych ekranach tabelka spada poniżej gry */
+                width: 100%;
+                max-width: 650px;
+            }
+            .container {
+                order: 1; /* Gra jest na górze */
+                padding: 25px;
+            }
             .grid {
                 grid-template-columns: repeat(5, 60px);
             }
@@ -286,9 +361,6 @@
                 width: 60px;
                 height: 60px;
                 font-size: 2rem;
-            }
-            .container {
-                padding: 25px;
             }
             .game-controls input,
             .game-controls select {
@@ -302,7 +374,7 @@
                 font-size: 2.5rem;
             }
             #minesRefresh {
-                position: static; /* Na telefonach układa się pod tytułem, żeby nie wychodzić za ekran */
+                position: static;
             }
             .balance {
                 font-size: 1.6rem;
@@ -314,30 +386,72 @@
 
     <canvas id="matrix-bg"></canvas>
 
-    <div class="container">
-        <!-- Zmieniony układ: tytuł i guzik Odśwież obok niego -->
-        <div class="header-container">
-            <h1>Mines</h1>
-            <button id="minesRefresh" onclick="window.location.reload()">Odśwież</button>
+    <!-- Wrapper trzymający oba panele (tabelka z lewej + gra) -->
+    <div class="main-wrapper">
+        
+        <!-- Lewy panel: Tabela mnożników -->
+        <div class="multiplier-panel">
+            <h2>Mnożnik za 1. pole</h2>
+            <table class="multiplier-table">
+                <tr>
+                    <th>Ilość min</th>
+                    <th>Mnożnik</th>
+                </tr>
+                <tr>
+                    <td>1 mina</td>
+                    <td>x1.05</td>
+                </tr>
+                <tr>
+                    <td>2 miny</td>
+                    <td>x1.10</td>
+                </tr>
+                <tr>
+                    <td>3 miny</td>
+                    <td>x1.15</td>
+                </tr>
+                <tr>
+                    <td>4 miny</td>
+                    <td>x1.25</td>
+                </tr>
+                <tr>
+                    <td>5 min</td>
+                    <td>x1.35</td>
+                </tr>
+                <tr>
+                    <td>6 min</td>
+                    <td>x1.50</td>
+                </tr>
+            </table>
         </div>
 
-        <div class="balance">Saldo: <span id="balance">1000</span> PLN</div>
-        <div class="game-controls">
-            <input type="number" id="minesBetAmount" min="1" placeholder="Zakład (PLN)">
-            <select id="mineCount">
-                <option value="1">1 mina</option>
-                <option value="2">2 miny</option>
-                <option value="3">3 miny</option>
-                <option value="4">4 miny</option>
-                <option value="5">5 miny</option>
-                <option value="6">6 min</option>
-            </select>
-            <button id="minesAllIn">All In</button>
-            <button id="minesStartGame">Rozpocznij grę</button>
-            <button id="minesCashOut" style="display: none;">Wypłać <span id="minesCashOutAmount">0</span> PLN</button>
+        <!-- Prawy panel: Główna gra -->
+        <div class="container">
+            <div class="header-container">
+                <h1>Mines</h1>
+                <button id="minesRefresh" onclick="window.location.reload()">Odśwież</button>
+            </div>
+
+            <div class="balance">Saldo: <span id="balance">1000</span> PLN</div>
+            
+            <div class="game-controls">
+                <input type="number" id="minesBetAmount" min="1" placeholder="Zakład (PLN)">
+                <select id="mineCount">
+                    <option value="1">1 mina</option>
+                    <option value="2">2 miny</option>
+                    <option value="3">3 miny</option>
+                    <option value="4">4 miny</option>
+                    <option value="5">5 min</option>
+                    <option value="6">6 min</option>
+                </select>
+                <button id="minesAllIn">All In</button>
+                <button id="minesStartGame">Rozpocznij grę</button>
+                <button id="minesCashOut" style="display: none;">Wypłać <span id="minesCashOutAmount">0</span> PLN</button>
+            </div>
+            
+            <div class="grid" id="minesGrid"></div>
+            <div class="message" id="minesMessage"></div>
         </div>
-        <div class="grid" id="minesGrid"></div>
-        <div class="message" id="minesMessage"></div>
+        
     </div>
 
     <script>
@@ -417,7 +531,6 @@
             }
         }
 
-        // Dodane nowe mnożniki wygranych dla 4, 5 i 6 min
         function getMinesMultiplierBase() {
             switch (parseInt(mineCount)) {
                 case 1: return 1.05;
@@ -455,7 +568,7 @@
                 minesMessageElement.textContent = 'Nieprawidłowa kwota zakładu lub niewystarczające saldo.';
                 return;
             }
-            // Zwiększony limit z 3 do 6 min, aby nie blokowało startu przy wyższych opcjach
+            
             if (mineCount < 1 || mineCount > 6) {
                 minesMessageElement.textContent = 'Liczba min musi być od 1 do 6.';
                 return;
@@ -488,6 +601,7 @@
             minesRevealed.push(index);
             const cell = minesGridElement.children[index];
 
+            // Delikatny algorytm korygujący losowanie podczas klikania
             if (lastClickedIndex !== null) {
                 const adjacentCells = getAdjacentCells(lastClickedIndex);
                 if (adjacentCells.includes(index)) {
