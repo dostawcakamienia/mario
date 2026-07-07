@@ -1,0 +1,737 @@
+a<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); 
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script><!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0c;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .main-wrapper {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Nowy, kompaktowy panel dynamiczny */
+        .multiplier-panel {
+            background: rgba(20, 20, 28, 0.75);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(187, 134, 252, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            text-align: center;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .multiplier-panel h2 {
+            font-size: 1.2rem;
+            color: #bb86fc;
+            text-shadow: 0 0 5px rgba(187, 134, 252, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .panel-info {
+            font-size: 0.85rem;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(187, 134, 252, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .step-item:hover {
+            transform: translateX(5px);
+            background: rgba(187, 134, 252, 0.1);
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .step-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .step-dots {
+            color: #777;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .container {
+            background: rgba(20, 20, 28, 0.75);
+            padding: 40px;
+            border-radius: 25px;
+            border: 1px solid rgba(187, 134, 252, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(187, 134, 252, 0.08), transparent);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .header-container h1 {
+            font-size: 3rem;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(187, 134, 252, 0.5);
+            margin: 0;
+        }
+
+        #minesRefresh {
+            position: absolute;
+            right: 0;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #8a4fff, #bb86fc);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #minesRefresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(187, 134, 252, 0.5);
+        }
+
+        /* Nowy przycisk powrotu po lewej stronie */
+        #minesBack {
+            position: absolute;
+            left: 0;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #3a3a58, #5a5a8a);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #minesBack:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(90, 90, 138, 0.5);
+        }
+
+        .balance {
+            font-size: 2rem;
+            margin-bottom: 25px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(42, 42, 90, 0.6), rgba(58, 58, 122, 0.6));
+            border-radius: 12px;
+            border: 1px solid rgba(187, 134, 252, 0.2);
+            color: #00ff88;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.15);
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-controls input,
+        .game-controls select {
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: #1a1a2e;
+            color: #ffffff;
+            width: 160px;
+            transition: background 0.3s, transform 0.2s, border-color 0.3s;
+        }
+
+        .game-controls input:focus,
+        .game-controls select:focus {
+            outline: none;
+            background: #242445;
+            border-color: rgba(187, 134, 252, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .game-controls button {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            background: linear-gradient(45deg, #4CAF50, #66ff99);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .game-controls button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 255, 128, 0.4);
+        }
+
+        .game-controls button:disabled {
+            background: #333338;
+            color: #777;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #minesAllIn {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+        }
+        #minesAllIn:hover {
+            box-shadow: 0 6px 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 80px);
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cell {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(145deg, #252542, #16162b);
+            border: 1px solid rgba(187, 134, 252, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: transform 0.2s, background 0.3s, border-color 0.3s;
+            user-select: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell:hover {
+            transform: scale(1.08);
+            border-color: rgba(187, 134, 252, 0.4);
+        }
+
+        .cell.revealed {
+            cursor: default;
+            transform: none;
+        }
+
+        .cell.mine {
+            background: linear-gradient(145deg, #ff4444, #cc3333);
+            border-color: #ff6666;
+            animation: shake 0.3s;
+        }
+
+        .cell.safe {
+            background: linear-gradient(145deg, #00cc66, #00994d);
+            border-color: #66ff99;
+        }
+
+        .message {
+            font-size: 1.3rem;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        @media (max-width: 950px) {
+            .main-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            .multiplier-panel {
+                order: 2; 
+                width: 100%;
+                max-width: 650px;
+            }
+            .container {
+                order: 1; 
+                padding: 25px;
+            }
+            .grid {
+                grid-template-columns: repeat(5, 60px);
+            }
+            .cell {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+            .game-controls input,
+            .game-controls select {
+                width: 140px;
+            }
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .header-container h1 {
+                font-size: 2.5rem;
+            }
+            #minesRefresh, #minesBack {
+                position: static;
+                width: 100%;
+                max-width: 200px;
+            }
+            .balance {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="main-wrapper">
+        
+        <!-- Nowy, inteligentny panel progresji -->
+        <div class="multiplier-panel">
+            <div>
+                <h2>Potencjał Wygranej</h2>
+            </div>
+            <div class="panel-info">
+                <span>Wybrane miny: <b id="preview-mines" style="color:white">1</b></span>
+                <span>Odkryto: <b id="preview-revealed" style="color:#bb86fc">0</b>/<span id="preview-max">24</span></span>
+            </div>
+            <div class="steps-container" id="dynamic-steps">
+                <!-- Kroki będą generowane przez JavaScript -->
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="header-container">
+                <!-- Dodany przycisk powrotu -->
+                <button id="minesBack" onclick="window.location.href='index2.html'">Powrót</button>
+                <h1>Mines</h1>
+                <button id="minesRefresh" onclick="window.location.reload()">Odśwież</button>
+            </div>
+
+            <div class="balance">Saldo: <span id="balance">1000</span> PLN</div>
+            
+            <div class="game-controls">
+                <input type="number" id="minesBetAmount" min="1" placeholder="Zakład (PLN)">
+                <select id="mineCount">
+                    <option value="1">1 mina</option>
+                    <option value="2">2 miny</option>
+                    <option value="3">3 miny</option>
+                    <option value="4">4 miny</option>
+                    <option value="5">5 min</option>
+                    <option value="6">6 min</option>
+                </select>
+                <button id="minesAllIn">All In</button>
+                <button id="minesStartGame">Rozpocznij grę</button>
+                <button id="minesCashOut" style="display: none;">Wypłać <span id="minesCashOutAmount">0</span> PLN</button>
+            </div>
+            
+            <div class="grid" id="minesGrid"></div>
+            <div class="message" id="minesMessage">Gotowy do gry? Ustaw zakład.</div>
+        </div>
+        
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        const alphabet = "01INF02ZSTABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+        let rainDrops = Array(Math.floor(columns)).fill(1);
+        
+        window.addEventListener('resize', () => {
+            columns = canvas.width / fontSize;
+            rainDrops = Array(Math.floor(columns)).fill(1);
+        });
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#bb86fc'; ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
+                rainDrops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 30);
+
+        let balance = 1000;
+        const balanceElement = document.getElementById('balance');
+
+        const clickSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_6d0d750382.mp3');
+        const winSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_5f5b8b6e1e.mp3');
+        const loseSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_3e4b4b6e1e.mp3');
+        const cashOutSound = new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_2f8b4b6e1e.mp3');
+
+        function updateBalance() {
+            balanceElement.textContent = balance.toFixed(2);
+        }
+
+        let minesGameActive = false;
+        let mines = [];
+        let minesRevealed = [];
+        let minesBetAmount = 0;
+        let mineCount = 1;
+        let minesMultiplier = 1;
+        const minesGridSize = 25;
+        let lastClickedIndex = null;
+
+        const minesBetAmountInput = document.getElementById('minesBetAmount');
+        const mineCountInput = document.getElementById('mineCount');
+        const minesAllInButton = document.getElementById('minesAllIn');
+        const minesStartGameButton = document.getElementById('minesStartGame');
+        const minesCashOutButton = document.getElementById('minesCashOut');
+        const minesCashOutAmountElement = document.getElementById('minesCashOutAmount');
+        const minesGridElement = document.getElementById('minesGrid');
+        const minesMessageElement = document.getElementById('minesMessage');
+
+        // Funkcja uaktualniająca dynamiczny panel
+        function updateDynamicPanel() {
+            const selectedMines = parseInt(mineCountInput.value) || 1;
+            const maxSafeClicks = 25 - selectedMines;
+            const currentClicks = minesGameActive ? minesRevealed.length : 0;
+            const remainingClicks = maxSafeClicks - currentClicks;
+            
+            document.getElementById('preview-mines').textContent = selectedMines;
+            document.getElementById('preview-revealed').textContent = currentClicks;
+            document.getElementById('preview-max').textContent = maxSafeClicks;
+
+            let baseMult = getMinesMultiplierBase(selectedMines);
+            let currentMult = minesGameActive ? minesMultiplier : 1;
+            
+            const stepsContainer = document.getElementById('dynamic-steps');
+            let html = '';
+
+            if (remainingClicks === 0) {
+                html = '<div class="step-dots" style="color:#00ff88; font-size:1rem; font-weight:bold;">Osiągnięto maksimum wygranej!</div>';
+            } else {
+                // Pokazujemy maksymalnie 3 kolejne kroki
+                const stepsToShow = Math.min(3, remainingClicks);
+                
+                for (let i = 1; i <= stepsToShow; i++) {
+                    let nextMult = currentMult * Math.pow(baseMult, i);
+                    let label = (currentClicks === 0) ? `${i}. pole` : `(${currentClicks + i}/${maxSafeClicks})`;
+                    
+                    html += `
+                        <div class="step-item">
+                            <span class="step-label">${label}</span>
+                            <span class="step-value">x${nextMult.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+
+                if (remainingClicks > stepsToShow) {
+                    html += `<div class="step-dots"> x${(currentMult * Math.pow(baseMult, remainingClicks)).toFixed(2)} na końcu!</div>`;
+                }
+            }
+
+            stepsContainer.innerHTML = html;
+        }
+
+        // Podpinamy nasłuchiwanie zmiany ilości min żeby aktualizować panel na bieżąco
+        mineCountInput.addEventListener('change', updateDynamicPanel);
+
+        function generateMines(count) {
+            mines = [];
+            while (mines.length < count) {
+                const pos = Math.floor(Math.random() * minesGridSize);
+                if (!mines.includes(pos)) mines.push(pos);
+            }
+        }
+
+        function createMinesGrid() {
+            minesGridElement.innerHTML = '';
+            minesRevealed = [];
+            for (let i = 0; i < minesGridSize; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', () => revealMinesCell(i));
+                minesGridElement.appendChild(cell);
+            }
+        }
+
+        function getMinesMultiplierBase(count = null) {
+            const m = count !== null ? count : parseInt(mineCountInput.value);
+            switch (m) {
+                case 1: return 1.05;
+                case 2: return 1.10;
+                case 3: return 1.15;
+                case 4: return 1.25;
+                case 5: return 1.35;
+                case 6: return 1.50;
+                default: return 1.05;
+            }
+        }
+
+        function getAdjacentCells(index) {
+            const row = Math.floor(index / 5);
+            const col = index % 5;
+            const adjacent = [];
+            for (let r = row - 1; r <= row + 1; r++) {
+                for (let c = col - 1; c <= col + 1; c++) {
+                    if (r >= 0 && r < 5 && c >= 0 && c < 5 && !(r === row && c === col)) {
+                        const adjIndex = r * 5 + c;
+                        if (!minesRevealed.includes(adjIndex)) {
+                            adjacent.push(adjIndex);
+                        }
+                    }
+                }
+            }
+            return adjacent;
+        }
+
+        function startMinesGame() {
+            minesBetAmount = parseFloat(minesBetAmountInput.value) || 0;
+            mineCount = parseInt(mineCountInput.value) || 1;
+            
+            if (minesBetAmount <= 0 || minesBetAmount > balance) {
+                minesMessageElement.textContent = 'Nieprawidłowa kwota zakładu lub niewystarczające saldo.';
+                return;
+            }
+            
+            if (mineCount < 1 || mineCount > 6) {
+                minesMessageElement.textContent = 'Liczba min musi być od 1 do 6.';
+                return;
+            }
+
+            balance -= minesBetAmount;
+            updateBalance();
+            generateMines(mineCount);
+            createMinesGrid();
+            minesGameActive = true;
+            minesStartGameButton.disabled = true;
+            minesAllInButton.disabled = true;
+            minesCashOutButton.style.display = 'inline-block';
+            minesMultiplier = 1;
+            minesCashOutAmountElement.textContent = (minesBetAmount * minesMultiplier).toFixed(2);
+            minesMessageElement.textContent = 'Powodzenia! Odkrywaj pola.';
+            lastClickedIndex = null;
+            clickSound.play();
+            updateDynamicPanel(); // Reset panelu na start
+        }
+
+        function allIn() {
+            if (minesGameActive) return;
+            minesBetAmountInput.value = balance.toFixed(2);
+            clickSound.play();
+        }
+
+        function revealMinesCell(index) {
+            if (!minesGameActive || minesRevealed.includes(index)) return;
+
+            minesRevealed.push(index);
+            const cell = minesGridElement.children[index];
+
+            if (lastClickedIndex !== null) {
+                const adjacentCells = getAdjacentCells(lastClickedIndex);
+                if (adjacentCells.includes(index)) {
+                    if (Math.random() < 0.9 && !mines.includes(index)) {
+                        mines.push(index);
+                    }
+                }
+            }
+
+            cell.classList.add('revealed');
+
+            if (mines.includes(index)) {
+                cell.classList.add('mine');
+                cell.textContent = '💣';
+                minesGameActive = false;
+                minesStartGameButton.disabled = false;
+                minesAllInButton.disabled = false;
+                minesCashOutButton.style.display = 'none';
+                minesMessageElement.textContent = 'Przegrałeś! Trafiłeś na minę.';
+                mines.forEach(mine => {
+                    if (!minesRevealed.includes(mine)) {
+                        minesGridElement.children[mine].classList.add('mine');
+                        minesGridElement.children[mine].textContent = '💣';
+                    }
+                });
+                loseSound.play();
+                updateDynamicPanel(); // Update po przegranej
+            } else {
+                cell.classList.add('safe');
+                cell.textContent = '💎';
+                minesMultiplier *= getMinesMultiplierBase();
+                minesCashOutAmountElement.textContent = (minesBetAmount * minesMultiplier).toFixed(2);
+                minesMessageElement.textContent = `Wyśmienicie! Mnożnik: ${minesMultiplier.toFixed(2)}x`;
+                winSound.play();
+                updateDynamicPanel(); // Update pokazujący kolejne kroki
+                
+                // Automatyczna wygrana jeśli odkryto wszystkie możliwe pola
+                if (minesRevealed.length === (25 - mineCount)) {
+                    minesCashOut();
+                }
+            }
+
+            lastClickedIndex = index;
+        }
+
+        function minesCashOut() {
+            if (!minesGameActive) return;
+
+            const winnings = minesBetAmount * minesMultiplier;
+            balance += winnings;
+            updateBalance();
+            minesGameActive = false;
+            minesStartGameButton.disabled = false;
+            minesAllInButton.disabled = false;
+            minesCashOutButton.style.display = 'none';
+            minesMessageElement.textContent = `Zakończyłeś! Wypłacono ${winnings.toFixed(2)} PLN!`;
+            cashOutSound.play();
+            updateDynamicPanel();
+        }
+
+        minesStartGameButton.addEventListener('click', startMinesGame);
+        minesAllInButton.addEventListener('click', allIn);
+        minesCashOutButton.addEventListener('click', minesCashOut);
+
+        // Inicjalizacja gry i panelu po wczytaniu strony
+        updateBalance();
+        createMinesGrid();
+        updateDynamicPanel();
+    </script>
+</body>
+</html>
